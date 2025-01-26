@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xdxd</title>
+    {% load static %}
+</head>
+<body>
+    {% for i in all %}
+    {{i.name}}
+    <video width="320" height="240" controls muted id="videoPlayer">
+        <source src="{{ i.link.url }}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    {% endfor %}
+
+    {% for rating in ratings %}
+    <p><strong>User:</strong> {{ rating.user.username }}</p>
+    <p><strong>Rating:</strong> {{ rating.rating }}</p>
+    <p><strong>Comment:</strong> {{ rating.comments }}</p>
+    <hr>
+{% empty %}
+    <p>No ratings available for this film.</p>
+{% endfor %}
+
+    <form action="" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {{ form }}
+        <button>dodaj</button>
+        </form>
+        <script src="{% static 'dist/bundle.js' %}"></script> <!-- Ścieżka do skompilowanego pliku -->
+
+
+</body>
+</html>
