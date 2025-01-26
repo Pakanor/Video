@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-  entry: './src/index.ts', // Upewnij się, że ta ścieżka jest poprawna
+  entry: './src/index.ts', 
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'static/dist'),
