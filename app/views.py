@@ -24,6 +24,7 @@ import json
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views import View
+from django.core.cache import cache
 
 
 def token(request, insert, email, title, message, what_type):
@@ -55,6 +56,7 @@ class Register(TemplateView):
                         insert.save()
                         token(request, insert, email, 'activation',
                               'activate your account', 'activate')
+                        request.session['redis'] = "zobaczymy"
 
                         return render(request, 'email_verification.html')
                 else:
@@ -93,6 +95,8 @@ class Login(TemplateView):
             if not check_password(password, password_db):
                 raise Exception("Wrong password")
             login(request, user)
+            session_items = "retard"
+            cache.set('my_cache_data', session_items, timeout=3600)
 
             next_url = request.GET.get('next', '/')
             if user.is_superuser:
@@ -112,6 +116,9 @@ class Login(TemplateView):
         if request.user.is_authenticated:
             return redirect('start')
         form = LoginForm()
+        session_key = request.session.session_key
+        print(session_key)
+
         return render(request, self.template_name, locals())
 
     def logout_view(request):
