@@ -19,11 +19,17 @@ class Ratings(models.Model):
 
 
 class VideoProgress(models.Model):
-    user = models.OneToOneField(
+    user = models.ForeignKey(
         User, on_delete=models.CASCADE)
     film = models.ForeignKey(
         Film, on_delete=models.CASCADE)
     last_watched = models.FloatField()
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'film'], name='unique_user_film_progress')
+        ]
+
     def __str__(self):
-        return f'Postęp użytkownika {self.user.username} w filmie {self.video_id}'
+        return f'Postęp użytkownika {self.user.username} w filmie {self.film.name}'

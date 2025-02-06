@@ -25,6 +25,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.core.cache import cache
+from django_ratelimit.decorators import ratelimit
+
+from django.test import TestCase
+
+#            A function to create activation/restart password and then sending in to a provided email
 
 
 def token(request, insert, email, title, message, what_type):
@@ -32,10 +37,12 @@ def token(request, insert, email, title, message, what_type):
     uid = urlsafe_base64_encode(force_bytes(insert.pk))
     activation_link = f"{request.scheme}://{request.get_host()}/{what_type}/{uid}/{token}/"
     send_mail(f'{title}',  f"{message}: {activation_link}",
-              settings.EMAIL_HOST_USER, ['robert.p3@o2.pl'])
+              settings.EMAIL_HOST_USER, [email])
+
+    #####################
 
 
-class Register(TemplateView):
+class Register(TemplateView):  # Register class
     template_name = 'register.html'
 
     def post(self, request):
@@ -52,27 +59,29 @@ class Register(TemplateView):
                     if validation is None:
                         insert = User.objects.create_user(username=username,
                                                           password=password, email=email)
+                        # Turning it zero so firstly the user has to click the activation link
                         insert.is_active = 0
                         insert.save()
                         token(request, insert, email, 'activation',
                               'activate your account', 'activate')
-                        request.session['redis'] = "zobaczymy"
 
                         return render(request, 'email_verification.html')
                 else:
-                    messages.add_message(
-                        request, messages.ERROR, "login lub email zajety")
+                    raise Exception("Login or email already in use")
+
             except (ValidationError) as e:
                 messages.add_message(request, messages.ERROR, e)
+            except Exception as e:
+                messages.add_message(
+                    request, messages.ERROR, e)
 
         return render(request, self.template_name, locals())
 
     def get(self, request):
+        # if user is logged in (the session exist in cache then redirect to the main page)
         if request.user.is_authenticated:
             return redirect('start')
-
         form = RegisterForm()
-
         return render(request, self.template_name, locals())
 
 
@@ -92,13 +101,11 @@ class Login(TemplateView):
             if not active:
                 raise Exception("f{user.username} not active")
             password_db = user.password
-            if not check_password(password, password_db):
-                raise Exception("Wrong password")
-            login(request, user)
-            session_items = "retard"
-            cache.set('my_cache_data', session_items, timeout=3600)
 
-            next_url = request.GET.get('next', '/')
+            if not check_password(password, password_db):
+                raise Exception("Wrong password or email")
+            login(request, user)
+            request.session.set_expiry(20)
             if user.is_superuser:
                 return redirect('add_video')
             return redirect('start')
@@ -116,8 +123,6 @@ class Login(TemplateView):
         if request.user.is_authenticated:
             return redirect('start')
         form = LoginForm()
-        session_key = request.session.session_key
-        print(session_key)
 
         return render(request, self.template_name, locals())
 
@@ -138,7 +143,7 @@ class EmailForPasswordChange(TemplateView):
             token(request, user, email, "reset",
                   "reset ypur password:", 'reset')
             messages.add_message(
-                request, messages.ERROR, f"succesfuly send to {email}")
+                request, messages.SUCCESS, f"succesfuly send to {email}")
 
             return render(request, self.template_name, locals())
 
@@ -227,7 +232,10 @@ class startView(TemplateView):
     def get(self, request):
         if request.user.is_authenticated:
             form = RatingForm()
-            all = Film.objects.all()
+            all = cache.get('films_list')
+            if not all:
+                all = Film.objects.all()
+                cache.set('films_list', all, timeout=3600)
             return render(request, self.template_name_logged, locals())
         else:
             all = Film.objects.all()
@@ -264,6 +272,9 @@ class Add_Video(UserPassesTestMixin, TemplateView):
                               link=link, thumbnail=thumbnail)
                 insert.save()
                 lid = insert.id
+                cache.delete('films_list')
+                films = Film.objects.all()
+                cache.set('films_list', films, timeout=3600)
                 return HttpResponseRedirect(f"watch/{lid}")
 
         else:
@@ -283,7 +294,12 @@ class VideoViewer(LoginRequiredMixin, TemplateView):
         all = Film.objects.filter(id=id)
 
         form = RatingForm()
-        ratings = Ratings.objects.filter(film_id=id)
+
+        ratings = cache.get('ratings')
+        if not ratings:
+            ratings = Ratings.objects.filter(film_id=id)
+            cache.set('ratings', ratings, timeout=3600)
+
         return render(request, template_name, locals())
 
     def post(self, request, id):
