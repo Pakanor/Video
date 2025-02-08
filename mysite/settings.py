@@ -20,7 +20,7 @@ PASSWORD_RESET_TIMEOUT = 3600
 SECRET_KEY = config('SECRET_KEY')
 
 DEBUG = True
-LOGIN_URL = 'login'
+LOGIN_URL = '/login'
 ALLOWED_HOSTS = []
 MEDIA_ROOT = os.path.join(BASE_DIR, 'app/films')
 

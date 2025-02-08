@@ -10,15 +10,16 @@ urlpatterns = [
     path('watch/<int:id>', VideoViewer.as_view(), name='watch'),
     path('register', Register.as_view(), name='register'),
     path('activate/<uidb64>/<token>/',
-         TokenValidation.as_view(), name='activate'),
+         TokenValidation.as_view(), name='token_validation'),
     path('login', Login.as_view(), name='login'),
-    path('request_reset', EmailForPasswordChange.as_view(), name="email_req"),
+    path('request_reset', EmailForPasswordChange.as_view(),
+         name="email_for_password_change"),
     path('reset/<uidb64>/<token>/',
          ChangePassword.as_view(), name='change_password'),
     path('logout/', Login.logout_view, name='logout'),
     path("add_video", Add_Video.as_view(), name='add_video'),
     path('watch/save-video-progress/',
-         VProgress.as_view(), name='track_progress'),
+         VProgress.as_view(), name='progress'),
 
 
 

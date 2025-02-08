@@ -27,7 +27,6 @@ from django.views import View
 from django.core.cache import cache
 from django_ratelimit.decorators import ratelimit
 
-from django.test import TestCase
 
 #            A function to create activation/restart password and then sending in to a provided email
 
@@ -99,13 +98,13 @@ class Login(TemplateView):
 
             active = user.is_active
             if not active:
-                raise Exception("f{user.username} not active")
+                raise Exception(f"{user.username} not active")
             password_db = user.password
 
             if not check_password(password, password_db):
                 raise Exception("Wrong password or email")
             login(request, user)
-            request.session.set_expiry(20)
+            request.session.set_expiry(1800)
             if user.is_superuser:
                 return redirect('add_video')
             return redirect('start')
@@ -234,12 +233,11 @@ class startView(TemplateView):
             form = RatingForm()
             all = cache.get('films_list')
             if not all:
-                all = Film.objects.all()
+                all = Film.objects.select_related().all()
                 cache.set('films_list', all, timeout=3600)
             return render(request, self.template_name_logged, locals())
         else:
-            all = Film.objects.all()
-            ratings = Ratings.objects.all()
+            all = Film.objects.select_related().all()
 
             return render(request, self.template_name_notlogged, locals())
 
@@ -259,26 +257,22 @@ class Add_Video(UserPassesTestMixin, TemplateView):
             link = request.FILES['link']
             thumbnail = request.FILES['thumbnail']
             file_type = str(link).split(".")
+
             if str(file_type[1]) != 'mp4':
                 messages.add_message(
                     request, messages.ERROR, "upload an mp4 file!")
-                return render(request, self.template_name, locals())
-            if not check_img.check_img(thumbnail):
-                messages.add_message(request, messages.ERROR, "add an image!")
-                return render(request, self.template_name, locals())
+                return render(request, self.template_name, {'form': form})
 
-            else:
-                insert = Film(name=name, description=description,
-                              link=link, thumbnail=thumbnail)
-                insert.save()
-                lid = insert.id
-                cache.delete('films_list')
-                films = Film.objects.all()
-                cache.set('films_list', films, timeout=3600)
-                return HttpResponseRedirect(f"watch/{lid}")
+            insert = Film(name=name, description=description,
+                          link=link, thumbnail=thumbnail)
+            insert.save()
+            lid = insert.id
+            cache.delete('films_list')
+            films = Film.objects.select_related().all()
+            cache.set('films_list', films, timeout=3600)
+            return HttpResponseRedirect(f"watch/{lid}")
 
-        else:
-            return render(request, self.template_name, locals())
+        return render(request, self.template_name, {'form': form})
 
     def get(self, request):
         form = VideoForm()
@@ -297,7 +291,7 @@ class VideoViewer(LoginRequiredMixin, TemplateView):
 
         ratings = cache.get('ratings')
         if not ratings:
-            ratings = Ratings.objects.filter(film_id=id)
+            ratings = Ratings.objects.filter(film_id=id).select_related('user')
             cache.set('ratings', ratings, timeout=3600)
 
         return render(request, template_name, locals())
@@ -307,13 +301,14 @@ class VideoViewer(LoginRequiredMixin, TemplateView):
 
         if request.user.is_authenticated:
 
-            if Ratings.objects.filter(user_id=request.user.id):
+            if Ratings.objects.filter(user_id=request.user.id).select_related('user'):
                 return redirect('watch', id)
 
             else:
                 if form.is_valid():
                     comment = form.cleaned_data['comments']
-                    rating = Ratings(rating=5, film_id=18,
+                    # ustaw tu pozniej z fronta
+                    rating = Ratings(rating=5, film_id=id,
                                      user_id=request.user.id, comments=comment)
                     rating.save()
                 return redirect('watch', id)

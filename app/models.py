@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 
 class Film(models.Model):
     name = models.CharField(max_length=30)
-    description = models.CharField(max_length=30)
+    description = models.CharField(max_length=255)
     link = models.FileField(max_length=150)
     thumbnail = models.FileField(max_length=150)
 
