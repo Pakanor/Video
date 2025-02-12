@@ -2,8 +2,11 @@
 from django.contrib import admin
 from django.urls import path
 from app.views import *
+from users.views import *
+from films.views import *
 from django.conf import settings
 from django.conf.urls.static import static
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('start', startView.as_view(), name='start'),

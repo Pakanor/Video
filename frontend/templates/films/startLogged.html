@@ -1,0 +1,11 @@
+{% extends 'start.html' %}
+
+
+    <title>{% block title %}My Site{% endblock %}</title>
+
+
+    {% block content %}
+    <a href="{% url 'logout' %}">Wyloguj się</a>
+    {% endblock %}
+    
+    

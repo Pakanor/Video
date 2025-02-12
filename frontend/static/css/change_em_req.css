@@ -1,0 +1,124 @@
+/* Importing a beautiful font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap');
+
+/* Base Styles */
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #121212;
+    color: #fff;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    max-width: 600px;
+    width: 100%;
+    padding: 50px 20px;
+    text-align: center;
+    background-color: #1d1d1d;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+h1 {
+    font-size: 2em;
+    margin-bottom: 20px;
+    color: #64b5f6; /* Light Blue */
+    font-weight: 500;
+}
+
+/* Form Styling */
+.form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-container input[type="email"] {
+    padding: 10px 15px;
+    border: 2px solid #333;
+    border-radius: 5px;
+    background-color: #333;
+    color: #fff;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.form-container input[type="email"]:focus {
+    border-color: #64b5f6; /* Highlight border on focus */
+    background-color: #424242;
+    box-shadow: 0 0 5px rgba(100, 181, 246, 0.6); /* Focus Glow */
+}
+
+.form-container input[type="email"]::placeholder {
+    color: #bbb;
+    opacity: 0.7;
+}
+
+/* Button Styling */
+.form-container button {
+    padding: 10px 20px;
+    border: none;
+    background-color: #64b5f6;
+    color: #fff;
+    font-size: 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.form-container button:hover {
+    background-color: #42a5f5;
+}
+
+/* Animating Button */
+@keyframes bounce {
+    0% {
+        transform: translateY(0);
+    }
+    30% {
+        transform: translateY(-5px);
+    }
+    50% {
+        transform: translateY(0);
+    }
+}
+
+.form-container button:active {
+    animation: bounce 0.3s ease;
+}
+
+/* Messages Styling */
+.messages {
+    list-style-type: none;
+    padding: 0;
+    margin-top: 20px;
+}
+
+.messages li {
+    background-color: #333;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.messages li.success {
+    background-color: #4caf50;
+}
+
+.messages li.error {
+    background-color: #f44336;
+}
+
+/* Responsive Styles */
+@media (max-width: 600px) {
+    .container {
+        padding: 30px 15px;
+    }
+}

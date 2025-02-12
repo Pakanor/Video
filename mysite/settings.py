@@ -22,7 +22,7 @@ SECRET_KEY = config('SECRET_KEY')
 DEBUG = True
 LOGIN_URL = '/login'
 ALLOWED_HOSTS = []
-MEDIA_ROOT = os.path.join(BASE_DIR, 'app/films')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'app/files')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -32,6 +32,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'app',
     'django_redis',
+    'users',
+    'films',
 ]
 CACHES = {
     'default': {
@@ -74,7 +76,7 @@ STATICFILES_DIRS = [
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ["frontend/templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
