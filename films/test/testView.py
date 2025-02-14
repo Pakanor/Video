@@ -1,5 +1,4 @@
 from ..models import Film, Ratings
-from app.models import Film
 from django.test import TestCase
 from django.test import TestCase, Client, override_settings
 from django.contrib.auth.models import User
@@ -7,7 +6,6 @@ from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 import tempfile
 import shutil
-from ..models import Film
 from django.core.cache import cache
 
 
@@ -48,7 +46,7 @@ class StartViewTests(TestCase):
         """Test the start view for an unauthenticated user."""
         response = self.client.get(reverse('start'))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'start_notLogged.html')
+        self.assertTemplateUsed(response, 'films/start_notLogged.html')
         # Check if 'all' (films) is present in the context
         self.assertIn('all', response.context)
         self.assertEqual(len(response.context['all']), 1)
@@ -58,7 +56,7 @@ class StartViewTests(TestCase):
         self.client.login(username='testuser', password='testpassword')
         response = self.client.get(reverse('start'))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'startLogged.html')
+        self.assertTemplateUsed(response, 'films/startLogged.html')
         self.assertIn('all', response.context)
         self.assertEqual(len(response.context['all']), 1)
         # There should be a review form
@@ -138,7 +136,7 @@ class AddVideoTests(TestCase):
         self.client.login(username='admin', password='adminpassword')
         response = self.client.get(reverse('add_video'))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'add_films.html')
+        self.assertTemplateUsed(response, 'films/add_films.html')
 
     def test_successful_video_upload(self):
         """Ensure a superuser can successfully upload a video."""

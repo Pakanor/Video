@@ -22,7 +22,7 @@ class FilmModelTest(TestCase):
         max_description_length = self.film._meta.get_field(
             'description').max_length
         self.assertEqual(max_name_length, 30)
-        self.assertEqual(max_description_length, 30)
+        self.assertEqual(max_description_length, 255)
 
 # Creating Rating Model Test
 

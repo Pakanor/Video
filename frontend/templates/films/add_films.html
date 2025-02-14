@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Upload Video</title>
 </head>
 <body>
-    <form action="add_video" method="post" enctype="multipart/form-data">
+
+    <form id="upload-form" action="add_video" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form }}
-    
-       
         <input type="submit" value="Submit">
     </form>
+
     {% if messages %}
     <ul class="messages">
         {% for message in messages %}
@@ -20,5 +20,11 @@
         {% endfor %}
     </ul>
     {% endif %}
+
+    
+    
 </body>
+<script>
+
+</script>
 </html>

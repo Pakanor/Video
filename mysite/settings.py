@@ -22,7 +22,13 @@ SECRET_KEY = config('SECRET_KEY')
 DEBUG = True
 LOGIN_URL = '/login'
 ALLOWED_HOSTS = []
-MEDIA_ROOT = os.path.join(BASE_DIR, 'app/files')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'films\\files')
+MEDIA_URL = '/media/'
+
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -34,7 +40,18 @@ INSTALLED_APPS = [
     'django_redis',
     'users',
     'films',
+    'channels',
+
 ]
+ASGI_APPLICATION = 'mysite.asgi.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',

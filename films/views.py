@@ -1,3 +1,4 @@
+from .models import Film
 from django.shortcuts import render
 from django.views.generic import TemplateView
 from .models import Film, Ratings, VideoProgress
@@ -14,6 +15,19 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.core.cache import cache
+from django.dispatch import receiver
+from django.db.models.signals import post_save
+from django.conf import settings
+import os
+import subprocess
+import ffmpeg
+from .tasks import convert_to_hls_task
+from django.http import JsonResponse
+from celery.result import AsyncResult
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from .models import Film
+from celery.result import AsyncResult
 
 
 class startView(TemplateView):
@@ -58,16 +72,31 @@ class Add_Video(UserPassesTestMixin, TemplateView):
             insert = Film(name=name, description=description,
                           link=link, thumbnail=thumbnail)
             insert.save()
-            lid = insert.id
+ ####
+            task = convert_to_hls_task.delay(insert.id)
+
             cache.delete('films_list')
             films = Film.objects.select_related().all()
             cache.set('films_list', films, timeout=3600)
-            return HttpResponseRedirect(f"watch/{lid}")
+            cache.set(f"task_{insert.id}", task.id, timeout=3600)
+
+            # Send response to frontend with the task_id and film_id
+            return redirect('film_progress', film_id=insert.id)
 
         return render(request, self.template_name, {'form': form})
 
     def get(self, request):
         form = VideoForm()
+        active_task = None
+        for film in Film.objects.all():
+            task_key = f"film_converting_{film.id}"
+            active_task = cache.get(task_key)
+            if active_task:
+                break
+
+        if active_task:
+            # dodaj tutaj redirecta zeby nie wracalo add_video
+            print("wypierdalaj")
         return render(request, self.template_name, locals())
 
 
@@ -77,7 +106,7 @@ class VideoViewer(LoginRequiredMixin, TemplateView):
         request.session["video_id"] = id
         template_name = 'films/VideoViewer.html'
 
-        all = Film.objects.filter(id=id)
+        film = Film.objects.get(id=id)
 
         form = RatingForm()
 
@@ -86,7 +115,7 @@ class VideoViewer(LoginRequiredMixin, TemplateView):
             ratings = Ratings.objects.filter(film_id=id).select_related('user')
             cache.set('ratings', ratings, timeout=3600)
 
-        return render(request, template_name, locals())
+        return render(request, template_name, {"film": film, "form": form, "ratings": ratings})
 
     def post(self, request, id):
         form = RatingForm(request.POST)
@@ -129,3 +158,13 @@ class VProgress(View):
             return JsonResponse({'status': 'success', 'progress_time': progress_time})
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
+
+
+class FilmProgressView(TemplateView):
+    template_name = 'films/film_progress.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Przekazanie film_id do template
+        context['film_id'] = kwargs['film_id']
+        return context

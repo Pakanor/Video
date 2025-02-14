@@ -1,11 +1,12 @@
 
 from django.contrib import admin
 from django.urls import path
-from app.views import *
 from users.views import *
 from films.views import *
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.static import serve
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -23,9 +24,8 @@ urlpatterns = [
     path("add_video", Add_Video.as_view(), name='add_video'),
     path('watch/save-video-progress/',
          VProgress.as_view(), name='progress'),
-
-
-
+    path('film_progress/<int:film_id>/',
+         FilmProgressView.as_view(), name='film_progress'),
 
 
 

@@ -57,3 +57,20 @@ function getCSRFToken(): string | null {
     }
     return null;
 }
+
+
+const video = document.getElementById('videoPlayer') as HTMLVideoElement;
+
+if (Hls.isSupported()) {
+    console.log("HLS jest obsługiwane przez przeglądarkę!");
+    const hls = new Hls();
+    hls.loadSource('path_to_your_video.m3u8'); // Ścieżka do manifestu HLS
+    hls.attachMedia(video);
+
+    hls.on(Hls.Events.MANIFEST_PARSED, function () {
+        console.log("Manifest HLS załadowany");
+    });
+} else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    console.log("Przeglądarka obsługuje HLS natywnie");
+    video.src = 'path_to_your_video.m3u8'; // Ścieżka do manifestu HLS
+}

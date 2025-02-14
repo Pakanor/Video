@@ -43,22 +43,21 @@ class Register(TemplateView):
                 user_exist = User.objects.filter(username=username)
                 email_exist = User.objects.filter(email=email)
                 validation = custom_validate_password(password)
-                if user_exist.exists() is False and email_exist.exists() is False:
-                    if validation is None:
-                        insert = User.objects.create_user(username=username,
-                                                          password=password, email=email)
-                        # Turning it zero so firstly the user has to click the activation link
-                        insert.is_active = 0
-                        insert.save()
-                        token(request, insert, email, 'activation',
-                              'activate your account', 'activate')
-
-                        return render(request, 'email_verification.html')
-                else:
+                if user_exist.exists() or email_exist.exists():
                     raise Login_or_email_in_use
+                if validation is None:
+                    insert = User.objects.create_user(username=username,
+                                                      password=password, email=email)
+                    # Turning it zero so firstly the user has to click the activation link
+                    insert.is_active = 0
+                    insert.save()
+                    token(request, insert, email, 'activation',
+                          'activate your account', 'activate')
+
+                    return render(request, 'users/email_verification.html')
 
             except (WeakPasswordError, Login_or_email_in_use) as e:
-                messages.add_message(request, messages.ERROR, e)
+                messages.add_message(request, messages.ERROR, str(e))
 
         return render(request, self.template_name, locals())
 
@@ -93,14 +92,14 @@ class Login(TemplateView):
             if user.is_superuser:
                 return redirect('add_video')
             return redirect('start')
-        except User.DoesNotExist:
-            messages.add_message(
-                request, messages.ERROR, "nie istnieje taki email")
-            return render(request, self.template_name, locals())
 
         except (Exception) as e:
             messages.add_message(
-                request, messages.ERROR, e)
+                request, messages.ERROR, str(e))
+            return render(request, self.template_name, locals())
+        except User.DoesNotExist:
+            messages.add_message(
+                request, messages.ERROR, "nie istnieje taki email")
             return render(request, self.template_name, locals())
 
     def get(self, request):
@@ -138,7 +137,7 @@ class EmailForPasswordChange(TemplateView):
             return render(request, self.template_name, locals())
 
         except (ValidationError, Exception, ValueError, User.DoesNotExist) as e:
-            messages.add_message(request, messages.ERROR, e)
+            messages.add_message(request, messages.ERROR, str(e))
             return render(request, self.template_name, locals())
 
     def get(self, request):
@@ -166,14 +165,14 @@ class ChangePassword(TemplateView):
                     return redirect('login')
 
             except (CustomValidationErrorPassword, Exception) as e:
-                messages.add_message(request, messages.ERROR, e)
+                messages.add_message(request, messages.ERROR, str(e))
 
             except User.DoesNotExist:
                 messages.add_message(
                     request, messages.SUCCESS, "If this email exists in our system, we will send you password reset instructions.")
                 return render(request, self.template_name, locals())
 
-        return render(request, 'reset_password.html', locals())
+        return render(request, 'users/reset_password.html', locals())
 
     def get(self, request, uidb64, token):
         form = ResetForm()
@@ -186,12 +185,12 @@ class ChangePassword(TemplateView):
         if user is not None and account_activation_token.check_token(user, token):
 
             user.save()
-            return render(request, 'reset_password.html', locals())
+            return render(request, 'users/reset_password.html', locals())
         else:
 
             messages.add_message(request, messages.ERROR,
                                  "bad token or expired")
-            return render(request, 'register.html')
+            return render(request, 'users/register.html')
 
 
 class TokenValidation(TemplateView):
@@ -211,4 +210,4 @@ class TokenValidation(TemplateView):
             messages.add_message(
                 request, messages.ERROR, "bad token or expired")
 
-            return render(request, 'register.html')
+            return render(request, 'users/register.html')

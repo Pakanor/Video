@@ -3,35 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>xdxd</title>
+    <title>{{ film.name }}</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     {% load static %}
 </head>
 <body>
-    {% for i in all %}
-    {{i.name}}
-    <video width="320" height="240" controls muted id="videoPlayer">
-        <source src="{{ i.link.url }}" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
-    {% endfor %}
+    <video id="videoPlayer" width="640" height="360" controls playsinline></video>
+    <p>Plik HLS: "{{ film.hls_playlist }}"</p>
 
-    {% for rating in ratings %}
-    <p><strong>User:</strong> {{ rating.user.username }}</p>
-    <p><strong>Rating:</strong> {{ rating.rating }}</p>
-    <p><strong>Comment:</strong> {{ rating.comments }}</p>
-    <hr>
-{% empty %}
-    <p>No ratings available for this film.</p>
-{% endfor %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var video = document.getElementById('videoPlayer');
+            var videoSrc = "/media/{{ film.hls_playlist }}"; // Ścieżka do pliku .m3u8
 
-    <form action="" method="post" enctype="multipart/form-data">
-        {% csrf_token %}
+            console.log("HLS URL:", videoSrc);
 
-        {{ form }}
-        <button>dodaj</button>
-        </form>
-        <script src="{% static 'dist/bundle.js' %}"></script> <!-- Ścieżka do skompilowanego pliku -->
-
-
+            if (Hls.isSupported()) {
+                var hls = new Hls();
+                hls.loadSource(videoSrc);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                    video.play();
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = videoSrc;
+                video.addEventListener('loadedmetadata', function () {
+                    video.play();
+                });
+            }
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Film Progress</title>
+</head>
+<body>
+    <h1>Postęp konwersji filmu</h1>
+    <p id="time-remaining">Czas do końca: Ładowanie...</p>  <!-- Tu wyświetlimy czas -->
+    
+    <script>
+        const filmId = "{{ film_id }}";  // ID filmu przekazane z backendu
+        console.log(filmId)
+const socket = new WebSocket(`ws://127.0.0.1:8000/ws/film_progress/${filmId}/`);
+
+socket.onopen = function(event) {
+    console.log("Połączono z WebSocket:", event);  // Powinno pojawić się to w konsoli
+};
+
+socket.onmessage = function(event) {
+    console.log("Otrzymano wiadomość WebSocket:", event);  // Powinno pojawić się to w konsoli, gdy otrzymasz wiadomość
+    const data = JSON.parse(event.data);
+    console.log("Otrzymany postęp:", data.progress);  // Powinno pojawić się to w konsoli
+    document.getElementById("time-remaining").innerText = `Czas do końca: ${data.progress}`;
+};
+
+socket.onerror = function(error) {
+    console.error("Błąd WebSocket:", error);  // Jeśli wystąpi błąd, powinno to pojawić się w konsoli
+};
+
+socket.onclose = function(event) {
+    console.log("Połączenie WebSocket zostało zamknięte:", event);
+};
+
+    </script>
+</body>
+</html>
